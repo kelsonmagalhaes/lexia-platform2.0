@@ -38,7 +38,7 @@ export default function LexIA() {
   };
 
   return (
-    <div className="flex flex-col h-screen max-h-screen">
+    <div className="flex flex-col h-screen max-h-screen pb-16 md:pb-0">
       {/* Header */}
       <div className="border-b border-border p-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">

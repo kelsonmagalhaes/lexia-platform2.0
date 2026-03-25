@@ -13,6 +13,15 @@ const navItems = [
   { to: '/profile', icon: User, label: 'Perfil' },
 ];
 
+// On mobile, prioritize the most-used pages; Profile replaces PDF (PDF is in Home quick actions)
+const mobileNavItems = [
+  { to: '/', icon: Home, label: 'Início' },
+  { to: '/quiz', icon: GraduationCap, label: 'Quiz' },
+  { to: '/lexia', icon: Brain, label: 'Lex IA' },
+  { to: '/vademecum', icon: Scale, label: 'Vade Mecum' },
+  { to: '/profile', icon: User, label: 'Perfil' },
+];
+
 export default function AppLayout() {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
@@ -54,7 +63,7 @@ export default function AppLayout() {
       {/* Bottom nav mobile */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t border-border bg-card z-50">
         <div className="flex justify-around py-2">
-          {navItems.slice(0, 5).map(({ to, icon: Icon, label }) => (
+          {mobileNavItems.map(({ to, icon: Icon, label }) => (
             <NavLink key={to} to={to} end={to === '/'} className={({ isActive }) =>
               `flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-xs transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground'}`
             }>

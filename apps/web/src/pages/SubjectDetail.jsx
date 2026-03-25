@@ -14,6 +14,7 @@ export default function SubjectDetail() {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [isAI, setIsAI] = useState(false);
+  const [contentCache, setContentCache] = useState({});
 
   useEffect(() => {
     if (subject) loadContent('overview');
@@ -21,12 +22,22 @@ export default function SubjectDetail() {
 
   const loadContent = async (type) => {
     setActiveTab(type);
+
+    // Serve from cache if available
+    if (contentCache[type]) {
+      setContent(contentCache[type].text);
+      setIsAI(contentCache[type].isAI);
+      setLoading(false);
+      return;
+    }
+
     setIsAI(false);
 
     const staticContent = getSubjectContent(subject, type);
     if (staticContent) {
       setContent(staticContent);
       setLoading(false);
+      setContentCache(prev => ({ ...prev, [type]: { text: staticContent, isAI: false } }));
       return;
     }
 
@@ -42,12 +53,17 @@ export default function SubjectDetail() {
       if (result && !result.startsWith('_Erro') && !result.startsWith('_A IA')) {
         setContent(result);
         setIsAI(true);
+        setContentCache(prev => ({ ...prev, [type]: { text: result, isAI: true } }));
       } else {
-        setContent(`## ${subject}\n\nConteúdo sendo preparado. Use os botões abaixo para praticar com quiz ou perguntar à Lex IA.`);
+        const fallback = `## ${subject}\n\nConteúdo sendo preparado. Use os botões abaixo para praticar com quiz ou perguntar à Lex IA.`;
+        setContent(fallback);
         setIsAI(false);
+        setContentCache(prev => ({ ...prev, [type]: { text: fallback, isAI: false } }));
       }
     } catch (_) {
-      setContent(`## ${subject}\n\nConteúdo sendo preparado. Use os botões abaixo para praticar com quiz ou perguntar à Lex IA.`);
+      const fallback = `## ${subject}\n\nConteúdo sendo preparado. Use os botões abaixo para praticar com quiz ou perguntar à Lex IA.`;
+      setContent(fallback);
+      setContentCache(prev => ({ ...prev, [type]: { text: fallback, isAI: false } }));
     }
     setLoading(false);
   };

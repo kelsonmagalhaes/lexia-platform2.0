@@ -17,7 +17,7 @@ export default function Home() {
   const xp = profile?.xp || 0;
   const level = getLevelFromXP(xp);
   const title = getLevelTitle(level);
-  const xpProgress = xp % 100;
+  const xpInLevel = xp % 100;  // XP progress within the current 100-XP level block
 
   return (
     <div className="max-w-2xl mx-auto p-4 md:p-8 space-y-6">
@@ -35,10 +35,10 @@ export default function Home() {
         </div>
         <div className="mt-4">
           <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
-            <span>{xp} XP</span><span>Próximo nível: {level * 100} XP</span>
+            <span>{xp} XP</span><span>Faltam {100 - xpInLevel} XP para o próximo nível</span>
           </div>
           <div className="h-2 bg-secondary rounded-full overflow-hidden">
-            <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${xpProgress}%` }} />
+            <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${xpInLevel}%` }} />
           </div>
         </div>
         <div className="mt-3 pt-3 border-t border-border flex items-center justify-between">
