@@ -1,0 +1,16 @@
+{
+  "projectId": "prj_9I11aw58FNGPcRhI6LlOfEgQXpgW",
+  "orgId": "team_n3zFDdDIOUimWjARHcmkrW2G",
+  "projectName": "lexstudy-academia-juridica",
+  "settings": {
+    "createdAt": 1774405603747,
+    "framework": "nextjs",
+    "devCommand": null,
+    "installCommand": "npm install --legacy-peer-deps",
+    "buildCommand": "npm run build",
+    "outputDirectory": ".next",
+    "rootDirectory": null,
+    "directoryListing": false,
+    "nodeVersion": "24.x"
+  }
+}

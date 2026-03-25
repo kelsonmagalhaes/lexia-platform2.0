@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 47% 8%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 8%;
+    --secondary: 222 47% 15%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 222 47% 15%;
+    --muted-foreground: 215 20% 55%;
+    --accent: 217 91% 60%;
+    --accent-foreground: 222 47% 8%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 222 47% 18%;
+    --input: 222 47% 15%;
+    --ring: 217 91% 60%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground; font-family: 'Inter', system-ui, sans-serif; }
+}
+
+.legal-prose h1, .legal-prose h2, .legal-prose h3 { @apply text-foreground font-semibold mb-2 mt-4; }
+.legal-prose p { @apply text-muted-foreground mb-3 leading-relaxed; }
+.legal-prose ul, .legal-prose ol { @apply text-muted-foreground mb-3 ml-4; }
+.legal-prose li { @apply mb-1; }
+.legal-prose strong { @apply text-foreground; }
+.legal-prose code { @apply bg-secondary px-1 py-0.5 rounded text-xs; }
