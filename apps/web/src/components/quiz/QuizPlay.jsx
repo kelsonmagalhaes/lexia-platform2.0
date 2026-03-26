@@ -3,13 +3,12 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle2, XCircle, ArrowRight, RotateCcw } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 
-export default function QuizPlay({ questions, quizType, subject, period, onBack }) {
+export default function QuizPlay({ questions, quizType, _subject, _period, onBack }) {
   const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState(null);
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
-  const [userAnswers, setUserAnswers] = useState({});
   const { updateProfile, profile } = useAuth();
 
   const q = questions[current];
@@ -20,7 +19,6 @@ export default function QuizPlay({ questions, quizType, subject, period, onBack 
     setShowResult(true);
     const isCorrect = opt === q.correct_answer;
     if (isCorrect) setScore(s => s + 1);
-    setUserAnswers(prev => ({ ...prev, [current]: { selected: opt, correct: isCorrect } }));
   };
 
   const next = () => {

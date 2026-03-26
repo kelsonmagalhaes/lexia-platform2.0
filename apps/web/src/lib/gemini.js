@@ -23,7 +23,7 @@ export async function invokeLLM(prompt) {
   }
 }
 
-export async function invokeLLMJSON(prompt, schema) {
+export async function invokeLLMJSON(prompt) {
   try {
     const res = await fetch('/api/ai', {
       method: 'POST',
@@ -51,8 +51,9 @@ export async function invokeLLMJSON(prompt, schema) {
         try {
           const arr = JSON.parse(clean.slice(arrStart, arrEnd + 1));
           return { questions: arr };
-        } catch (_) {}
-      }
+        } catch (_ignored) {
+          // not valid JSON array, fall through
+        }      }
       return null;
     }
 
