@@ -14,6 +14,7 @@ export default function SubjectDetail() {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [isAI, setIsAI] = useState(false);
+  const [contentCache, setContentCache] = useState({});
 
   useEffect(() => {
     if (subject) loadContent('overview');
@@ -21,12 +22,22 @@ export default function SubjectDetail() {
 
   const loadContent = async (type) => {
     setActiveTab(type);
+
+    // Serve from cache if available
+    if (contentCache[type]) {
+      setContent(contentCache[type].text);
+      setIsAI(contentCache[type].isAI);
+      setLoading(false);
+      return;
+    }
+
     setIsAI(false);
 
     const staticContent = getSubjectContent(subject, type);
     if (staticContent) {
       setContent(staticContent);
       setLoading(false);
+      setContentCache(prev => ({ ...prev, [type]: { text: staticContent, isAI: false } }));
       return;
     }
 
@@ -39,15 +50,16 @@ export default function SubjectDetail() {
         summary: `Crie um resumo completo para estudo de "${subject}" (${period}º período). Inclua conceitos-chave, definições e pontos que costumam cair em provas e OAB. Use markdown.`,
       };
       const result = await invokeLLM(prompts[type] || prompts.overview);
-      if (result && !result.startsWith('_Erro') && !result.startsWith('_A IA')) {
+      // Error responses from invokeLLM start with '_' (markdown italic wrapper)
+      if (result && !result.startsWith('_')) {
         setContent(result);
         setIsAI(true);
+        setContentCache(prev => ({ ...prev, [type]: { text: result, isAI: true } }));
       } else {
-        setContent(`## ${subject}\n\nConteúdo sendo preparado. Use os botões abaixo para praticar com quiz ou perguntar à Lex IA.`);
-        setIsAI(false);
+        setContent(null);
       }
     } catch (_) {
-      setContent(`## ${subject}\n\nConteúdo sendo preparado. Use os botões abaixo para praticar com quiz ou perguntar à Lex IA.`);
+      setContent(null);
     }
     setLoading(false);
   };
@@ -103,6 +115,15 @@ export default function SubjectDetail() {
             )}
           </div>
           <div className="legal-prose"><ReactMarkdown>{content}</ReactMarkdown></div>
+        </div>
+      )}
+
+      {!loading && !content && (
+        <div className="bg-card border border-border rounded-xl p-8 text-center space-y-3">
+          <p className="text-sm text-muted-foreground">Não foi possível carregar o conteúdo via IA.</p>
+          <Button variant="outline" size="sm" onClick={() => loadContent(activeTab)}>
+            Tentar novamente
+          </Button>
         </div>
       )}
 

@@ -42,7 +42,7 @@ export default function VadeMecum() {
       const formatted = formatArticleResult(staticResults);
       setResult(formatted);
       setSource('static');
-      setLoading(false);
+      setLoading(true);
       tryAIEnhance(query);
       return;
     }

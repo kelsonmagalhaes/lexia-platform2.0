@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { CURRICULUM } from '@/lib/curriculum';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { GraduationCap, Loader2, Play, Database, Sparkles } from 'lucide-react';
+import { GraduationCap, Loader2, Play, Database, AlertCircle } from 'lucide-react';
 import QuizPlay from '../components/quiz/QuizPlay';
 import { invokeLLMJSON } from '@/lib/gemini';
 import { getSubjectQuiz } from '@/lib/contentDB';
@@ -16,7 +16,7 @@ export default function Quiz() {
   const [questionCount, setQuestionCount] = useState('5');
   const [questions, setQuestions] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [questionsSource, setQuestionsSource] = useState('static');
+  const [error, setError] = useState('');
 
   const periodSubjects = selectedPeriod
     ? CURRICULUM.find(c => c.period === parseInt(selectedPeriod))?.subjects || []
@@ -24,6 +24,7 @@ export default function Quiz() {
 
   const generateQuiz = async () => {
     setLoading(true);
+    setError('');
     const subject = selectedSubject || 'Direito Geral';
     const count = parseInt(questionCount);
 
@@ -32,7 +33,6 @@ export default function Quiz() {
       if (staticQuiz && staticQuiz.length > 0) {
         const shuffled = [...staticQuiz].sort(() => Math.random() - 0.5);
         setQuestions(shuffled.slice(0, Math.min(count, shuffled.length)));
-        setQuestionsSource('static');
         setLoading(false);
         return;
       }
@@ -40,24 +40,22 @@ export default function Quiz() {
 
     try {
       const prompt = quizType === 'multiple_choice'
-        ? `Crie ${count} questões de múltipla escolha sobre "${subject}" para estudantes de Direito. Nível OAB. Retorne JSON com array "questions", cada item com: question (string), options (objeto com A,B,C,D strings), correct_answer (string "A","B","C" ou "D"), explanation (string).`
-        : `Crie ${count} questões discursivas sobre "${subject}" para estudantes de Direito. Nível OAB. Retorne JSON com array "questions", cada item com: question (string), key_points (array strings), model_answer (string).`;
-      const schema = { questions: [] };
-      const result = await invokeLLMJSON(prompt, schema);
+        ? `Crie exatamente ${count} questões de múltipla escolha sobre "${subject}" para estudantes de Direito, nível OAB. Retorne JSON com a estrutura: {"questions":[{"question":"...","options":{"A":"...","B":"...","C":"...","D":"..."},"correct_answer":"A","explanation":"..."}]}`
+        : `Crie exatamente ${count} questões discursivas sobre "${subject}" para estudantes de Direito, nível OAB. Retorne JSON com a estrutura: {"questions":[{"question":"...","key_points":["...","..."],"model_answer":"..."}]}`;
+      const result = await invokeLLMJSON(prompt, { questions: [] });
       if (result?.questions?.length > 0) {
         setQuestions(result.questions);
-        setQuestionsSource('ai');
       } else {
-        alert('Não foi possível gerar questões. Tente novamente ou selecione uma disciplina diferente.');
+        setError('Não foi possível gerar questões. Tente novamente ou selecione outra disciplina.');
       }
     } catch (_) {
-      alert('Erro ao gerar questões. Verifique sua conexão e tente novamente.');
+      setError('Erro ao gerar questões. Verifique sua conexão e tente novamente.');
     }
     setLoading(false);
   };
 
   if (questions?.length > 0) {
-    return <QuizPlay questions={questions} quizType={quizType} subject={selectedSubject} period={selectedPeriod} onBack={() => setQuestions(null)} />;
+    return <QuizPlay questions={questions} quizType={quizType} subject={selectedSubject} period={selectedPeriod} onBack={() => { setQuestions(null); setError(''); }} />;
   }
 
   return (
@@ -72,14 +70,14 @@ export default function Quiz() {
       <div className="space-y-4 bg-card border border-border rounded-xl p-6">
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">Período</label>
-          <Select value={selectedPeriod} onValueChange={v => { setSelectedPeriod(v); setSelectedSubject(''); }}>
+          <Select value={selectedPeriod} onValueChange={v => { setSelectedPeriod(v); setSelectedSubject(''); setError(''); }}>
             <SelectTrigger><SelectValue placeholder="Selecione o período" /></SelectTrigger>
             <SelectContent>{CURRICULUM.map(c => <SelectItem key={c.period} value={String(c.period)}>{c.name}</SelectItem>)}</SelectContent>
           </Select>
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">Disciplina</label>
-          <Select value={selectedSubject} onValueChange={setSelectedSubject} disabled={!selectedPeriod}>
+          <Select value={selectedSubject} onValueChange={v => { setSelectedSubject(v); setError(''); }} disabled={!selectedPeriod}>
             <SelectTrigger><SelectValue placeholder="Selecione a disciplina" /></SelectTrigger>
             <SelectContent>{periodSubjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
           </Select>
@@ -112,6 +110,13 @@ export default function Quiz() {
           <div className="flex items-center gap-2 p-3 bg-secondary rounded-lg">
             <Database className="w-4 h-4 text-green-500 shrink-0" />
             <p className="text-xs text-muted-foreground">Questões do banco local disponíveis para esta disciplina.</p>
+          </div>
+        )}
+
+        {error && (
+          <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
+            <AlertCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+            <p className="text-xs text-destructive">{error}</p>
           </div>
         )}
 

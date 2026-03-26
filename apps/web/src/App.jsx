@@ -5,6 +5,7 @@ import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
 import PageNotFound from './lib/PageNotFound'
 import { AuthProvider, useAuth } from '@/lib/AuthContext'
+import UserNotRegisteredError from '@/components/UserNotRegisteredError'
 import AppLayout from './components/layout/AppLayout'
 import Home from './pages/Home'
 import Subjects from './pages/Subjects'
@@ -21,9 +22,9 @@ import Privacy from './pages/Privacy'
 import Terms from './pages/Terms'
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isAuthenticated } = useAuth()
+  const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated } = useAuth()
 
-  if (isLoadingAuth) {
+  if (isLoadingPublicSettings || isLoadingAuth) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
@@ -33,6 +34,8 @@ const AuthenticatedApp = () => {
       </div>
     )
   }
+
+  if (authError?.type === 'user_not_registered') return <UserNotRegisteredError />
 
   if (!isAuthenticated) {
     return (
