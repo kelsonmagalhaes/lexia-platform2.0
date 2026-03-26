@@ -14,7 +14,7 @@ const navItems = [
 ];
 
 export default function AppLayout() {
-  const { logout, user } = useAuth();
+  const { logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => { logout(); navigate('/'); };

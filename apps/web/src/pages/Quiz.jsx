@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { CURRICULUM } from '@/lib/curriculum';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { GraduationCap, Loader2, Play, Database, Sparkles } from 'lucide-react';
+import { GraduationCap, Loader2, Play, Database, AlertCircle } from 'lucide-react';
 import QuizPlay from '../components/quiz/QuizPlay';
 import { invokeLLMJSON } from '@/lib/gemini';
 import { getSubjectQuiz } from '@/lib/contentDB';
@@ -16,7 +16,7 @@ export default function Quiz() {
   const [questionCount, setQuestionCount] = useState('5');
   const [questions, setQuestions] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [questionsSource, setQuestionsSource] = useState('static');
+  const [error, setError] = useState('');
 
   const periodSubjects = selectedPeriod
     ? CURRICULUM.find(c => c.period === parseInt(selectedPeriod))?.subjects || []
@@ -24,6 +24,7 @@ export default function Quiz() {
 
   const generateQuiz = async () => {
     setLoading(true);
+    setError('');
     const subject = selectedSubject || 'Direito Geral';
     const count = parseInt(questionCount);
 
@@ -32,7 +33,6 @@ export default function Quiz() {
       if (staticQuiz && staticQuiz.length > 0) {
         const shuffled = [...staticQuiz].sort(() => Math.random() - 0.5);
         setQuestions(shuffled.slice(0, Math.min(count, shuffled.length)));
-        setQuestionsSource('static');
         setLoading(false);
         return;
       }
@@ -42,16 +42,14 @@ export default function Quiz() {
       const prompt = quizType === 'multiple_choice'
         ? `Crie ${count} questões de múltipla escolha sobre "${subject}" para estudantes de Direito. Nível OAB. Retorne JSON com array "questions", cada item com: question (string), options (objeto com A,B,C,D strings), correct_answer (string "A","B","C" ou "D"), explanation (string).`
         : `Crie ${count} questões discursivas sobre "${subject}" para estudantes de Direito. Nível OAB. Retorne JSON com array "questions", cada item com: question (string), key_points (array strings), model_answer (string).`;
-      const schema = { questions: [] };
-      const result = await invokeLLMJSON(prompt, schema);
+      const result = await invokeLLMJSON(prompt);
       if (result?.questions?.length > 0) {
         setQuestions(result.questions);
-        setQuestionsSource('ai');
       } else {
-        alert('Não foi possível gerar questões. Tente novamente ou selecione uma disciplina diferente.');
+        setError('Não foi possível gerar questões. Tente novamente ou selecione uma disciplina diferente.');
       }
     } catch (_) {
-      alert('Erro ao gerar questões. Verifique sua conexão e tente novamente.');
+      setError('Erro ao gerar questões. Verifique sua conexão e tente novamente.');
     }
     setLoading(false);
   };
@@ -112,6 +110,13 @@ export default function Quiz() {
           <div className="flex items-center gap-2 p-3 bg-secondary rounded-lg">
             <Database className="w-4 h-4 text-green-500 shrink-0" />
             <p className="text-xs text-muted-foreground">Questões do banco local disponíveis para esta disciplina.</p>
+          </div>
+        )}
+
+        {error && (
+          <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+            <AlertCircle className="w-4 h-4 text-destructive shrink-0" />
+            <p className="text-xs text-destructive">{error}</p>
           </div>
         )}
 
