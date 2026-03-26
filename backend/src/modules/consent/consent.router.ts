@@ -1,7 +1,9 @@
 import { Router } from 'express';
 import { requireAuth } from '../../middleware/auth';
+import { validateBody } from '../../middleware/validate';
 import { AuthRequest } from '../../middleware/auth';
 import * as consentService from './consent.service';
+import { upsertConsentSchema } from './consent.schema';
 import { Response, NextFunction } from 'express';
 
 const router = Router();
@@ -13,7 +15,7 @@ router.get('/', async (req: AuthRequest, res: Response, next: NextFunction) => {
   } catch (error) { next(error); }
 });
 
-router.post('/', async (req: AuthRequest, res: Response, next: NextFunction) => {
+router.post('/', validateBody(upsertConsentSchema), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { consentType, accepted } = req.body;
     const ip = req.ip;

@@ -1,14 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../../middleware/auth';
 import * as usersService from './users.service';
-import { z } from 'zod';
-
-const updateMeSchema = z.object({
-  name: z.string().min(2).max(100).optional(),
-  currentPeriod: z.coerce.number().int().min(1).max(10).optional(),
-  institutionCustom: z.string().max(255).optional(),
-  institutionId: z.string().uuid().optional(),
-});
+import { UpdateMeInput } from './users.schema';
 
 export async function getMe(req: AuthRequest, res: Response, next: NextFunction) {
   try {
@@ -21,12 +14,7 @@ export async function getMe(req: AuthRequest, res: Response, next: NextFunction)
 
 export async function updateMe(req: AuthRequest, res: Response, next: NextFunction) {
   try {
-    const parsed = updateMeSchema.safeParse(req.body);
-    if (!parsed.success) {
-      res.status(400).json({ error: 'Validation Error', details: parsed.error.flatten() });
-      return;
-    }
-    const user = await usersService.updateMe(req.userId!, parsed.data);
+    const user = await usersService.updateMe(req.userId!, req.body as UpdateMeInput);
     res.json({ data: user, message: 'Perfil atualizado' });
   } catch (error) {
     next(error);
