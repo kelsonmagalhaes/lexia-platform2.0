@@ -35,8 +35,5 @@
       "check": true
     }
   ],
-  "framework": {
-    "version": "5.4.21"
-  },
   "crons": []
 }
