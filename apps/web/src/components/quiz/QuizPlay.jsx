@@ -71,6 +71,17 @@ export default function QuizPlay({ questions, quizType, subject, period, onBack 
   }
 
   const opts = q.options ? Object.entries(q.options) : [];
+
+  if (opts.length === 0) {
+    return (
+      <div className="max-w-2xl mx-auto p-4 md:p-8">
+        <div className="bg-card border border-border rounded-2xl p-6 text-center space-y-3">
+          <p className="text-sm text-muted-foreground">Questão inválida recebida da IA. Tente gerar um novo quiz.</p>
+          <Button variant="outline" onClick={onBack}>Voltar</Button>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="max-w-2xl mx-auto p-4 md:p-8 space-y-6">
       <div className="bg-card border border-border rounded-2xl p-6 space-y-4">

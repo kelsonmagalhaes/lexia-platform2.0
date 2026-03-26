@@ -7,6 +7,8 @@ import ReactMarkdown from 'react-markdown';
 
 const SYSTEM_PROMPT = `Você é Lex IA, assistente jurídica especializada em Direito brasileiro. Ajude estudantes de Direito com explicações didáticas, resumos, análise de casos e preparação para provas e OAB. Use linguagem clara e cite fundamentos legais quando relevante. Não forneça consultoria jurídica profissional.`;
 
+const SUGGESTIONS = ['Explique habeas corpus', 'O que é prescrição?', 'Direitos fundamentais', 'Princípios do Direito Penal'];
+
 export default function LexIA() {
   const [searchParams] = useSearchParams();
   const initialSubject = searchParams.get('subject');
@@ -16,24 +18,30 @@ export default function LexIA() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef(null);
+  const messagesRef = useRef(messages);
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, loading]);
 
-  const send = async () => {
-    if (!input.trim() || loading) return;
-    const userMsg = input.trim();
+  const send = async (overrideText) => {
+    const userMsg = (overrideText ?? input).trim();
+    if (!userMsg || loading) return;
     setInput('');
-    setMessages(m => [...m, { role: 'user', content: userMsg }]);
+    setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
     setLoading(true);
-    const history = messages.map(m => `${m.role === 'user' ? 'Usuário' : 'Lex IA'}: ${m.content}`).join('\n');
-    const prompt = `${SYSTEM_PROMPT}\n\nHistórico:\n${history}\n\nUsuário: ${userMsg}\n\nLex IA:`;
+
+    // Cap history at last 10 messages to avoid excessive prompt size
+    const recentHistory = messagesRef.current.slice(-10);
+    const history = recentHistory.map(m => `${m.role === 'user' ? 'Usuário' : 'Lex IA'}: ${m.content}`).join('\n');
+    const prompt = `${SYSTEM_PROMPT}\n\nHistórico recente:\n${history}\n\nUsuário: ${userMsg}\n\nLex IA:`;
+
     let reply;
     try {
       reply = await invokeLLM(prompt);
     } catch (e) {
       reply = `**Erro:** ${e.message}`;
     }
-    setMessages(m => [...m, { role: 'assistant', content: reply }]);
+    setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
     setLoading(false);
   };
 
@@ -50,7 +58,7 @@ export default function LexIA() {
             <p className="text-xs text-muted-foreground">Assistente Jurídica</p>
           </div>
         </div>
-        <Button variant="ghost" size="icon" onClick={() => setMessages([{ role: 'assistant', content: 'Olá! Como posso ajudar com seus estudos jurídicos?' }])}>
+        <Button variant="ghost" size="icon" title="Limpar conversa" onClick={() => setMessages([{ role: 'assistant', content: 'Olá! Como posso ajudar com seus estudos jurídicos?' }])}>
           <Trash2 className="w-4 h-4" />
         </Button>
       </div>
@@ -68,7 +76,7 @@ export default function LexIA() {
           <div className="flex justify-start">
             <div className="bg-card border border-border rounded-2xl px-4 py-3 flex items-center gap-2">
               <Loader2 className="w-4 h-4 text-primary animate-spin" />
-              <span className="text-sm text-muted-foreground">Analisando...</span>
+              <span className="text-sm text-muted-foreground">Lex IA está pensando...</span>
             </div>
           </div>
         )}
@@ -78,8 +86,8 @@ export default function LexIA() {
       {/* Suggestions */}
       {messages.length <= 1 && (
         <div className="px-4 pb-2 flex gap-2 overflow-x-auto">
-          {['Explique habeas corpus','O que é prescrição?','Direitos fundamentais','Princípios do Direito Penal'].map(s => (
-            <button key={s} onClick={() => { setInput(s); }} className="shrink-0 text-xs bg-secondary border border-border rounded-full px-3 py-1.5 text-foreground hover:border-primary/40 transition-colors">
+          {SUGGESTIONS.map(s => (
+            <button key={s} onClick={() => send(s)} className="shrink-0 text-xs bg-secondary border border-border rounded-full px-3 py-1.5 text-foreground hover:border-primary/40 transition-colors">
               {s}
             </button>
           ))}
@@ -90,7 +98,7 @@ export default function LexIA() {
       <div className="border-t border-border p-4 shrink-0">
         <div className="flex gap-2">
           <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send()} placeholder="Pergunte sobre qualquer tema jurídico..." className="flex-1 h-10 bg-secondary border border-border rounded-xl px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
-          <Button size="icon" onClick={send} disabled={loading || !input.trim()}><Send className="w-4 h-4" /></Button>
+          <Button size="icon" onClick={() => send()} disabled={loading || !input.trim()}><Send className="w-4 h-4" /></Button>
         </div>
       </div>
     </div>
