@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getUser, saveUser, logout as doLogout, getProfile, saveProfile } from './auth';
+import { getUser, saveUser, logout as doLogout, getProfile, saveProfile, registerAccount, loginWithPassword } from './auth';
 
 const AuthContext = createContext(null);
 
@@ -25,6 +25,44 @@ export function AuthProvider({ children }) {
     setProfile(p);
   };
 
+  const loginAccount = async (email, password) => {
+    const result = await loginWithPassword(email, password);
+    if (result.error) return result;
+    const { account } = result;
+    const u = { id: account.id, email: account.email, name: account.name, created_at: account.created_at };
+    const p = getProfile() || {
+      current_period: account.period || 1,
+      xp: 0,
+      level: 1,
+      institution: account.institution || '',
+      phone: account.phone || '',
+    };
+    saveUser(u);
+    saveProfile(p);
+    setUser(u);
+    setProfile(p);
+    return {};
+  };
+
+  const register = async (data) => {
+    const result = await registerAccount(data);
+    if (result.error) return result;
+    const { account } = result;
+    const u = { id: account.id, email: account.email, name: account.name, created_at: account.created_at };
+    const p = {
+      current_period: account.period || 1,
+      xp: 0,
+      level: 1,
+      institution: account.institution || '',
+      phone: account.phone || '',
+    };
+    saveUser(u);
+    saveProfile(p);
+    setUser(u);
+    setProfile(p);
+    return {};
+  };
+
   const updateProfile = (updates) => {
     const p = { ...(profile || {}), ...updates };
     saveProfile(p);
@@ -43,7 +81,7 @@ export function AuthProvider({ children }) {
       isLoadingPublicSettings: false,
       isAuthenticated: !!user,
       authError: null,
-      login, logout, updateProfile
+      login, loginAccount, register, logout, updateProfile
     }}>
       {children}
     </AuthContext.Provider>

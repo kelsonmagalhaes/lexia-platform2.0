@@ -4,13 +4,13 @@
   "projectName": "lexstudy-academia-juridica",
   "settings": {
     "createdAt": 1774405603747,
-    "framework": "nextjs",
+    "framework": null,
     "devCommand": null,
     "installCommand": "npm install --legacy-peer-deps",
     "buildCommand": "npm run build",
-    "outputDirectory": ".next",
-    "rootDirectory": null,
+    "outputDirectory": "dist",
+    "rootDirectory": "apps/web",
     "directoryListing": false,
-    "nodeVersion": "24.x"
+    "nodeVersion": "20.x"
   }
 }

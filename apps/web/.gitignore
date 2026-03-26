@@ -1,1 +1,3 @@
-.vercel
+# Track .vercel directory for deployment configuration
+!.vercel
+.vercel/.env*.local
